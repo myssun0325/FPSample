@@ -17,26 +17,32 @@ class Solve {
         name: String,
         price: Double
     ) {
-        shoppingCart = addItem(cart: shoppingCart, name: name, price: price)
-        calcCartTotal()
+        
+        shoppingCart = addItem(cart: shoppingCart, item: makeCartItem(name: "shoes", price: 3.45))
+        
+        var total = calcTotal(cart: shoppingCart)
+        setCartTotalDom(total: total)
+        updateShippingIcons(cart: shoppingCart)
+        updateTaxDom(total: total)
     }
     
     // A
-    func calcCartTotal() {
-        shoppingCartTotal = calcTotal(cart: shoppingCart)
-        
-        setCartTotalDom()
-        updateShippingIcons()
-        updateTaxDom()
-    }
-        
-    // A
-    func updateShippingIcons() {
+    func updateShippingIcons(cart: [Item]) {
         func getBuyButtonsDom() -> [Button] { [] }
         
         var buyButtons = getBuyButtonsDom()
         for button in buyButtons {
-            if getFreeShopping(itemPrice: button.item.price, total: shoppingCartTotal) {
+            
+            // 추가할 제품이 들어있는 새 장바구니 (담게된다면 새장바구니로 무료배송인지 판별)
+            var newCart = addItem(
+                cart: cart,
+                item: makeCartItem(
+                    name: button.item.name,
+                    price: button.item.price
+                )
+            )
+            
+            if getFreeShopping(cart: newCart) {
                 button.showFreeShippingIcon()
             } else {
                 button.hideFreeShippingIcon()
@@ -45,24 +51,27 @@ class Solve {
     }
 
     // A
-    func updateTaxDom() {
-        setTaxDom(price: calcTax(amount: shoppingCartTotal))
+    func updateTaxDom(total: Double) {
+        setTaxDom(price: calcTax(amount: total))
+    }
+    
+    func setCartTotalDom(total: Double) {
+        
     }
     
     // C
+    // 함수가 Item의 구조를 모르도록
     func addItem(
         cart: [Item],
-        name: String,
-        price: Double
+        item: Item
     ) -> [Item] {
         var newCart = cart
-        newCart.append(
-            .init(
-                name: name,
-                price: price
-            )
-        )
+        newCart.append(item)
         return newCart
+    }
+    
+    func makeCartItem(name: String, price: Double) -> Item {
+        return .init(name: name, price: price)
     }
     
     // 암묵적 출력 없애기 (전역변수 > 지역변수)
@@ -78,8 +87,8 @@ class Solve {
     }
 
     // C
-    func getFreeShopping(itemPrice: Double, total: Double) -> Bool {
-        return itemPrice + total >= 20
+    func getFreeShopping(cart: [Item]) -> Bool {
+        return calcTotal(cart: cart) >= 20
     }
     
     // C
